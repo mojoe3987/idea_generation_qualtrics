@@ -1,10 +1,10 @@
 // GPT-4o Integration for Qualtrics - Plain Text Interface
-// This code creates a simple text interface within Qualtrics that connects to Fireworks AI's LLaMA-v3p1-8b
+// This code creates a simple text interface within Qualtrics that connects to Mistral AI
 
 Qualtrics.SurveyEngine.addOnload(function() {
     // Configuration with hardcoded API key
-    const FIREWORKS_API_KEY = "fw_3ZhoS2SaeKAzeAEvV3a25Nsx"; // Replace with your actual Fireworks API key before deploying
-    const FIREWORKS_MODEL = "accounts/fireworks/models/llama-v3p1-8b-instruct"; // Using LLaMA v3p1 8B model
+    const MISTRAL_API_KEY = "YOUR_MISTRAL_API_KEY"; // Replace with your actual Mistral API key before deploying
+    const MISTRAL_MODEL = "mistral-small-latest"; // Using Mistral's small model
     
     // Create the main container
     const container = document.createElement("div");
@@ -276,30 +276,36 @@ Qualtrics.SurveyEngine.addOnload(function() {
             loadingIndicator.style.display = "block";
             
             // Debug message in console
-            console.log("Calling Fireworks API with model:", FIREWORKS_MODEL);
+            console.log("Calling Mistral API with model:", MISTRAL_MODEL);
             
             // Create headers with Authorization
             const headers = {
                 "Content-Type": "application/json",
-                "Authorization": 'Bearer ' + FIREWORKS_API_KEY.trim()
+                "Authorization": 'Bearer ' + MISTRAL_API_KEY.trim()
             };
             
             const requestBody = {
-                model: FIREWORKS_MODEL,
+                model: MISTRAL_MODEL,
                 messages: [
                     { role: "system", content: "You are a helpful assistant for idea generation." },
                     { role: "user", content: prompt }
                 ],
-                max_tokens: 2000,
                 temperature: 1,
                 top_p: 1,
+                max_tokens: 2000,
+                stream: false,
+                presence_penalty: 0,
                 frequency_penalty: 0,
-                presence_penalty: 0
+                response_format: {
+                    type: "text"
+                },
+                n: 1,
+                safe_prompt: false
             };
             
-            console.log("Sending request to Fireworks API...");
+            console.log("Sending request to Mistral API...");
             
-            const response = await fetch("https://api.fireworks.ai/inference/v1/chat/completions", {
+            const response = await fetch("https://api.mistral.ai/v1/chat/completions", {
                 method: "POST",
                 headers: headers,
                 body: JSON.stringify(requestBody)
@@ -315,19 +321,19 @@ Qualtrics.SurveyEngine.addOnload(function() {
                 console.error("Error response:", JSON.stringify(data));
                 const errorMsg = data.error && typeof data.error === 'string' ? data.error : 
                                 (data.error && data.error.message ? data.error.message : JSON.stringify(data));
-                throw new Error(`Fireworks API error (${response.status}): ${errorMsg}`);
+                throw new Error(`Mistral API error (${response.status}): ${errorMsg}`);
             }
             
             if (!data.choices || !data.choices[0] || !data.choices[0].message) {
                 console.error("Unexpected response format:", JSON.stringify(data));
-                throw new Error("Invalid response format from Fireworks API");
+                throw new Error("Invalid response format from Mistral API");
             }
             
             loadingIndicator.style.display = "none";
             return data.choices[0].message.content;
         } catch (error) {
             loadingIndicator.style.display = "none";
-            console.error("Error calling Fireworks API:", error);
+            console.error("Error calling Mistral API:", error);
             return "Sorry, there was an error communicating with the AI: " + error.message;
         }
     }
