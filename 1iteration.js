@@ -3,8 +3,8 @@
 
 Qualtrics.SurveyEngine.addOnload(function() {
     // Configuration with hardcoded API key
-    const MISTRAL_API_KEY = "YOUR_MISTRAL_API_KEY"; // Replace with your actual Mistral API key before deploying
-    const MISTRAL_MODEL = "mistral-small-latest"; // Using Mistral's small model
+    const MISTRAL_API_KEY = "C0JWs6KIzxchL0r8GrzvIwooTNe88sOJ"; // Your Mistral API key
+    const MISTRAL_MODEL = "ministral-8b-latest"; // Using Mistral's small model
     
     // Create the main container
     const container = document.createElement("div");
@@ -287,12 +287,12 @@ Qualtrics.SurveyEngine.addOnload(function() {
             const requestBody = {
                 model: MISTRAL_MODEL,
                 messages: [
-                    { role: "system", content: "You are a helpful assistant for idea generation." },
+                    { role: "system", content: "You are a helpful assistant for generating a creative toy idea for children aged 5-11. You must follow these strict constraints: Only use paper clips, water bottles, and paper bags as materials. Do not introduce any other materials. Generate only one idea at a time. Do not propose multiple ideas at once. The toy should be suitable for the target age group. IMPORTANT: Do not generate any toy ideas unless explicitly asked by the user. If the user's message does not explicitly ask for a toy idea, engage in a conversation to understand what kind of toy they are looking for. When generating an idea, clearly describe how the toy is assembled and how children can play with it. Stay within these boundaries while being as imaginative as possible! You will only have 1 iterations with the user. So, the user cannot answer. HENCE IMPORTANT: Do not ask questions as the user cannot answer but instead make sure that you propose ONE IDEA." },
                     { role: "user", content: prompt }
                 ],
-                temperature: 1,
+                temperature: 0.7,
                 top_p: 1,
-                max_tokens: 2000,
+                max_tokens: 800,
                 stream: false,
                 presence_penalty: 0,
                 frequency_penalty: 0,

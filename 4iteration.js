@@ -4,8 +4,8 @@
 
 Qualtrics.SurveyEngine.addOnload(function() {
     // Configuration with hardcoded API key
-    const MISTRAL_API_KEY = "YOUR_MISTRAL_API_KEY"; // Replace with your actual Mistral API key before deploying
-    const MISTRAL_MODEL = "mistral-small-latest"; // Using Mistral's small model
+    const MISTRAL_API_KEY = "C0JWs6KIzxchL0r8GrzvIwooTNe88sOJ"; // Your Mistral API key
+    const MISTRAL_MODEL = "ministral-8b-latest"; // Using Mistral's small model
     
     // Current iteration tracker
     let currentIteration = 1;
@@ -426,17 +426,17 @@ Qualtrics.SurveyEngine.addOnload(function() {
             const messages = [
                 {
                     "role": "system",
-                    "content": "You are an AI assistant helping the user generate ideas. Be creative, helpful, and engaging."
+                    "content": "You are a helpful assistant for generating a creative toy idea for children aged 5-11. You must follow these strict constraints: Only use paper clips, water bottles, and paper bags as materials. Do not introduce any other materials. Generate only one idea at a time. Do not propose multiple ideas at once. The toy should be suitable for the target age group. IMPORTANT: Do not generate any toy ideas unless explicitly asked by the user. If the user's message does not explicitly ask for a toy idea, engage in a conversation to understand what kind of toy they are looking for. When the user asks for help improving an existing idea, provide constructive suggestions while maintaining the material constraints. Your improvements should be specific and actionable. When generating an idea, clearly describe how the toy is assembled and how children can play with it. Stay within these boundaries while being as imaginative as possible! You have multiple iterations with the user. Please make the interaction interactive and potentially ask questions at the end of each iteration with the focus on improving the idea. However, when asking these questions always keep the material restrictions in mind."
                 }
             ];
             
-            // Add conversation history
-            const historyElements = document.querySelectorAll(".history-item");
-            historyElements.forEach(item => {
-                const role = item.classList.contains("user-message") ? "user" : "assistant";
-                const content = item.querySelector(".message-content").textContent;
-                messages.push({ "role": role, "content": content });
-            });
+            // Add conversation history from previous iterations
+            if (conversation && conversation.iterations) {
+                conversation.iterations.forEach(iter => {
+                    messages.push({ "role": "user", "content": iter.userPrompt });
+                    messages.push({ "role": "assistant", "content": iter.aiResponse });
+                });
+            }
             
             // Add the current prompt
             messages.push({ "role": "user", "content": prompt });
@@ -453,9 +453,9 @@ Qualtrics.SurveyEngine.addOnload(function() {
                 body: JSON.stringify({
                     "model": MISTRAL_MODEL,
                     "messages": messages,
-                    "temperature": 1,
+                    "temperature": 0.7,
                     "top_p": 1,
-                    "max_tokens": 2000,
+                    "max_tokens": 800,
                     "stream": false,
                     "presence_penalty": 0,
                     "frequency_penalty": 0,
