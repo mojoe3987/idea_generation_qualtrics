@@ -1,0 +1,29 @@
+# Environment variables (never commit API keys!)
+.env
+*.env
+backend/.env
+
+# Old chatbot file with exposed API keys
+qualtrics_chatbot.js
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.so
+*.egg
+*.egg-info/
+dist/
+build/
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
