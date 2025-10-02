@@ -2,7 +2,7 @@ from flask import Flask, request, jsonify
 from flask_cors import CORS
 import psycopg2
 from psycopg2.extras import RealDictCursor
-import openai
+from openai import OpenAI
 import os
 from datetime import datetime
 import numpy as np
@@ -17,9 +17,11 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 # Configuration
-openai.api_key = os.getenv('OPENAI_API_KEY')
 DATABASE_URL = os.getenv('DATABASE_URL')
 API_SECRET_KEY = os.getenv('API_SECRET_KEY', 'your-secret-key')
+
+# Initialize OpenAI client (v1.0+ format)
+openai_client = OpenAI(api_key=os.getenv('OPENAI_API_KEY'))
 
 # Database connection pool
 def get_db_connection():
@@ -100,7 +102,7 @@ def get_existing_ideas(study_id, limit=200):
 def create_embedding(text):
     """Generate embedding vector for text"""
     try:
-        response = openai.embeddings.create(
+        response = openai_client.embeddings.create(
             model="text-embedding-ada-002",
             input=text
         )
@@ -227,7 +229,7 @@ def generate_diverse_idea():
         })
         
         # Step 5: Generate idea (with or without RAG)
-        response = openai.chat.completions.create(
+        response = openai_client.chat.completions.create(
             model="gpt-4",
             messages=messages,
             max_tokens=500,
