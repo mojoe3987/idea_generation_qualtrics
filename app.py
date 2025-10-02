@@ -66,6 +66,12 @@ def init_db():
     conn.close()
     logger.info("Database initialized successfully")
 
+# Initialize database on app startup (called by Gunicorn)
+try:
+    init_db()
+except Exception as e:
+    logger.error(f"Failed to initialize database: {e}")
+
 # Authentication middleware
 def verify_api_key(api_key):
     return api_key == API_SECRET_KEY
