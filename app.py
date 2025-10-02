@@ -167,10 +167,10 @@ def store_idea(study_id, participant_id, session_id, idea_text, original_prompt,
     
     return idea_id
 
-# Main API endpoint
+# Main API endpoint with RAG toggle
 @app.route('/api/generate-diverse-idea', methods=['POST'])
 def generate_diverse_idea():
-    """Main endpoint for generating diverse ideas with RAG"""
+    """Main endpoint for generating ideas with optional RAG"""
     try:
         # Verify API key
         auth_header = request.headers.get('Authorization', '')
@@ -188,22 +188,30 @@ def generate_diverse_idea():
         study_id = data.get('studyId', 'default_study')
         participant_id = data.get('participantId', 'anonymous')
         session_id = data.get('sessionId', '')
+        use_rag = data.get('useRAG', True)  # Toggle RAG on/off
         
         if not current_message:
             return jsonify({'error': 'No message provided', 'success': False}), 400
         
-        logger.info(f"Generating idea for study: {study_id}, participant: {participant_id}")
+        logger.info(f"Generating idea for study: {study_id}, participant: {participant_id}, RAG: {use_rag}")
         
-        # Step 1: Retrieve existing ideas (RAG - Retrieval)
-        existing_ideas = get_existing_ideas(study_id)
-        logger.info(f"Retrieved {len(existing_ideas)} existing ideas")
+        enhanced_message = current_message
+        crowded_clusters = []
         
-        # Step 2: Find crowded concept clusters
-        crowded_clusters = find_crowded_clusters(existing_ideas)
-        logger.info(f"Found {len(crowded_clusters)} crowded clusters")
-        
-        # Step 3: Build enhanced prompt (RAG - Augmentation)
-        enhanced_message = build_diverse_prompt(current_message, crowded_clusters)
+        # Only use RAG if enabled
+        if use_rag:
+            # Step 1: Retrieve existing ideas (RAG - Retrieval)
+            existing_ideas = get_existing_ideas(study_id)
+            logger.info(f"Retrieved {len(existing_ideas)} existing ideas")
+            
+            # Step 2: Find crowded concept clusters
+            crowded_clusters = find_crowded_clusters(existing_ideas)
+            logger.info(f"Found {len(crowded_clusters)} crowded clusters")
+            
+            # Step 3: Build enhanced prompt (RAG - Augmentation)
+            enhanced_message = build_diverse_prompt(current_message, crowded_clusters)
+        else:
+            logger.info("RAG disabled - using baseline OpenAI generation")
         
         # Step 4: Build conversation messages for OpenAI
         messages = conversation_history.copy()
@@ -212,21 +220,20 @@ def generate_diverse_idea():
             "content": enhanced_message
         })
         
-        # Step 5: Generate diverse idea (RAG - Generation)
+        # Step 5: Generate idea (with or without RAG)
         response = openai.chat.completions.create(
             model="gpt-4",
             messages=messages,
             max_tokens=500,
-            temperature=0.8  # Higher temperature for creativity
+            temperature=0.8
         )
         
         generated_idea = response.choices[0].message.content.strip()
         logger.info(f"Generated idea: {generated_idea[:100]}...")
         
-        # Step 6: Create embedding for new idea
+        # Step 6: Create embedding and store (always store for future analysis)
         embedding = create_embedding(generated_idea)
         
-        # Step 7: Store idea immediately for future diversity
         idea_id = store_idea(
             study_id=study_id,
             participant_id=participant_id,
@@ -243,7 +250,8 @@ def generate_diverse_idea():
             'response': generated_idea,
             'success': True,
             'idea_id': idea_id,
-            'clusters_avoided': len(crowded_clusters)
+            'rag_enabled': use_rag,
+            'clusters_avoided': len(crowded_clusters) if use_rag else 0
         })
         
     except Exception as e:
