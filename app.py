@@ -143,7 +143,7 @@ def find_crowded_clusters(ideas, min_cluster_size=3):
         
         if len(cluster_indices) >= min_cluster_size:
             # Get representative ideas from this cluster
-            cluster_ideas = [idea_texts[i] for i in cluster_indices[:3]]
+            cluster_ideas = [idea_texts[i] for i in cluster_indices[:2]]  # Change from :3 to :2
             crowded_clusters.append(cluster_ideas)
     
     # Return ALL crowded clusters (no artificial limit)
