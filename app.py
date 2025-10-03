@@ -85,7 +85,7 @@ def get_existing_ideas(study_id, limit=200):
     cur = conn.cursor()
     
     cur.execute("""
-        SELECT idea_text, embedding, created_at
+        SELECT idea_text, embedding::text, created_at
         FROM ideas 
         WHERE study_id = %s AND embedding IS NOT NULL
         ORDER BY created_at DESC
@@ -95,6 +95,13 @@ def get_existing_ideas(study_id, limit=200):
     ideas = cur.fetchall()
     cur.close()
     conn.close()
+    
+    # Convert embedding strings to lists of floats
+    for idea in ideas:
+        if isinstance(idea['embedding'], str):
+            # Remove brackets and convert to list of floats
+            embedding_str = idea['embedding'].strip('[]')
+            idea['embedding'] = [float(x) for x in embedding_str.split(',')]
     
     return ideas
 
