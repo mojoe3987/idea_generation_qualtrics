@@ -167,12 +167,15 @@ def store_idea(study_id, participant_id, session_id, idea_text, original_prompt,
     conn = get_db_connection()
     cur = conn.cursor()
     
+    # Convert embedding list to proper format for pgvector
+    embedding_str = '[' + ','.join(map(str, embedding)) + ']'
+    
     cur.execute("""
         INSERT INTO ideas 
         (study_id, participant_id, session_id, idea_text, original_prompt, embedding)
-        VALUES (%s, %s, %s, %s, %s, %s)
+        VALUES (%s, %s, %s, %s, %s, %s::vector)
         RETURNING id
-    """, (study_id, participant_id, session_id, idea_text, original_prompt, embedding))
+    """, (study_id, participant_id, session_id, idea_text, original_prompt, embedding_str))
     
     idea_id = cur.fetchone()['id']
     conn.commit()
