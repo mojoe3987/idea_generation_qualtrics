@@ -112,7 +112,7 @@ def create_embedding(text):
         raise
 
 # Find crowded concept clusters
-def find_crowded_clusters(ideas, n_clusters=5, min_cluster_size=3):
+def find_crowded_clusters(ideas, min_cluster_size=3):
     """Identify overrepresented concept areas using clustering"""
     if len(ideas) < 10:
         return []
@@ -121,12 +121,15 @@ def find_crowded_clusters(ideas, n_clusters=5, min_cluster_size=3):
     embeddings = np.array([idea['embedding'] for idea in ideas])
     idea_texts = [idea['idea_text'] for idea in ideas]
     
+    # Adaptive number of clusters based on dataset size
+    # Rule of thumb: 1 cluster per 10-15 ideas
+    n_clusters = max(3, min(len(ideas) // 12, 20))  # Between 3 and 20 clusters
+    
     # Perform K-means clustering
-    n_clusters = min(n_clusters, len(ideas) // 3)
     kmeans = KMeans(n_clusters=n_clusters, random_state=42, n_init=10)
     labels = kmeans.fit_predict(embeddings)
     
-    # Find large clusters (crowded concepts)
+    # Find ALL clusters that are crowded (3+ ideas)
     crowded_clusters = []
     for cluster_id in range(n_clusters):
         cluster_indices = np.where(labels == cluster_id)[0]
@@ -136,6 +139,8 @@ def find_crowded_clusters(ideas, n_clusters=5, min_cluster_size=3):
             cluster_ideas = [idea_texts[i] for i in cluster_indices[:3]]
             crowded_clusters.append(cluster_ideas)
     
+    # Return ALL crowded clusters (no artificial limit)
+    logger.info(f"Found {len(crowded_clusters)} crowded clusters out of {n_clusters} total clusters")
     return crowded_clusters
 
 # Build enhanced prompt with diversity guidance
@@ -146,7 +151,8 @@ def build_diverse_prompt(current_message, crowded_clusters):
     
     avoidance_text = "\n\nTo ensure diversity, please avoid similarity to these overused concept areas:\n"
     
-    for idx, cluster in enumerate(crowded_clusters[:3], 1):  # Top 3 clusters
+    # Include ALL crowded clusters (not just top 3)
+    for idx, cluster in enumerate(crowded_clusters, 1):
         avoidance_text += f"\nCluster {idx} (avoid these themes):\n"
         for idea in cluster:
             avoidance_text += f"- {idea}\n"
