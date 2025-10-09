@@ -156,15 +156,15 @@ def build_diverse_prompt(current_message, crowded_clusters):
     if not crowded_clusters:
         return current_message
     
-    avoidance_text = "\n\nTo ensure diversity, please avoid similarity to these overused concept areas:\n"
+    avoidance_text = "\n\nIMPORTANT: The following concept areas are OVERUSED. You MUST generate an idea that is COMPLETELY DIFFERENT from these:\n"
     
     # Include ALL crowded clusters (not just top 3)
     for idx, cluster in enumerate(crowded_clusters, 1):
-        avoidance_text += f"\nCluster {idx} (avoid these themes):\n"
+        avoidance_text += f"\nOVERUSED Cluster {idx} (DO NOT use these themes):\n"
         for idea in cluster:
             avoidance_text += f"- {idea}\n"
     
-    avoidance_text += "\nPlease generate a creative idea that explores a different direction."
+    avoidance_text += "\nYour idea MUST explore a COMPLETELY DIFFERENT direction with different materials, technologies, or concepts. Do NOT create variations of the above ideas."
     
     return current_message + avoidance_text
 
