@@ -96,12 +96,12 @@ def get_existing_ideas(study_id, limit=200):
     cur.close()
     conn.close()
     
-    # Convert embedding strings to lists of floats
+    # Convert embedding strings to numpy arrays (float32 for memory efficiency)
     for idea in ideas:
         if isinstance(idea['embedding'], str):
-            # Remove brackets and convert to list of floats
+            # Remove brackets and convert to float32 array (50% memory saving)
             embedding_str = idea['embedding'].strip('[]')
-            idea['embedding'] = [float(x) for x in embedding_str.split(',')]
+            idea['embedding'] = np.fromstring(embedding_str, sep=',', dtype=np.float32)
     
     return ideas
 
@@ -124,8 +124,8 @@ def find_crowded_clusters(ideas, min_cluster_size=3):
     if len(ideas) < 10:
         return []
     
-    # Extract embeddings
-    embeddings = np.array([idea['embedding'] for idea in ideas])
+    # Extract embeddings as float32 (memory efficient)
+    embeddings = np.array([idea['embedding'] for idea in ideas], dtype=np.float32)
     idea_texts = [idea['idea_text'] for idea in ideas]
     
     # Adaptive number of clusters based on dataset size
